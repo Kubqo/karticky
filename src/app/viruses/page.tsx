@@ -3,15 +3,18 @@
 import importCsvAsString from "@/lib/csvImporter";
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import Header from "@/components/nav/Header";
 import Question from "@/components/Question";
+import { useUser } from "@/hooks/userContext";
+import { redirect } from "next/navigation";
+import { shuffle } from "@/utils/shuffle";
+import { QuestionType } from "@/types/Question";
+import { formatData } from "@/utils/formatData";
 
 export default function Home() {
-  // State to store parsed data
-  const [data, setData] = useState<string[][]>([]);
-  const [mode, setMode] = useState<"card" | "row">("row");
+  const [data, setData] = useState<QuestionType[]>([]);
+  const user = useUser();
 
   const tableHeaders = [
     "Ochorenie",
@@ -21,6 +24,12 @@ export default function Home() {
     "Histologické vyšetrenie",
     "patologie",
   ];
+
+  useEffect(() => {
+    if (!user) {
+      redirect("/");
+    }
+  }, [user]);
 
   useEffect(() => {
     importCsvAsString("/csv/viruses.csv")
@@ -53,8 +62,8 @@ export default function Home() {
                 formattedData.push([...data[i]]);
               }
             }
-
-            setData(formattedData);
+            shuffle(formattedData);
+            setData(formatData(formattedData));
           },
         });
       })
@@ -65,8 +74,12 @@ export default function Home() {
 
   return (
     <div className="h-screen w-screen  flex flex-col items-center border-2 gap-4">
-      <Header mode={mode} setMode={setMode} />
-      <Question data={data} tableHeaders={tableHeaders} mode={mode} />
+      <Header />
+      <Question
+        data={data}
+        tableHeaders={tableHeaders}
+        questionType="viruses"
+      />
     </div>
   );
 }

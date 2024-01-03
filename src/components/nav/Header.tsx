@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User } from "lucide-react";
+import { useUser } from "@/hooks/userContext";
+import { logout, signInWithGooglePopup } from "@/api/auth";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
-type Props = {
-  mode: "card" | "row";
-  setMode: (mode: "card" | "row") => void;
-};
-
-export default function Header({ mode, setMode }: Props) {
-  // State to store parsed data
-
+export default function Header() {
+  const user = useUser();
   const [pathname, setPathname] = useState<string>("");
 
   useEffect(() => {
@@ -21,39 +30,63 @@ export default function Header({ mode, setMode }: Props) {
   return (
     <div className="w-screen border-2 static p-2 flex flex-row justify-between items-center">
       <Image alt="logo" src="/uwu.png" width={80} height={10} />
-
-      <div className="flex gap-4">
-        <a
-          href="/viruses"
-          className={`font-bold ${
-            pathname === "/viruses" ? "text-[#ff6188]" : ""
-          }`}
-        >
-          Viry
-        </a>
-        <a
-          href="/bacteria"
-          className={`font-bold ${
-            pathname === "/bacteria" ? "text-[#ff6188]" : ""
-          }`}
-        >
-          Bakterie
-        </a>
-        <a
-          href="/parasites"
-          className={`font-bold ${
-            pathname === "/parasites" ? "text-[#ff6188]" : ""
-          }`}
-        >
-          Parazity
-        </a>
-      </div>
+      {user && (
+        <div className="flex gap-4">
+          <Link
+            href="/viruses"
+            className={`font-bold ${
+              pathname === "/viruses" ? "text-[#ff6188]" : ""
+            }`}
+          >
+            Viry
+          </Link>
+          <Link
+            href="/bacteria"
+            className={`font-bold ${
+              pathname === "/bacteria" ? "text-[#ff6188]" : ""
+            }`}
+          >
+            Bakterie
+          </Link>
+          <Link
+            href="/parasites"
+            className={`font-bold ${
+              pathname === "/parasites" ? "text-[#ff6188]" : ""
+            }`}
+          >
+            Parazity
+          </Link>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
-        <Checkbox checked={mode === "row"} onClick={() => setMode("row")} />
-        Tabulka
-        <Checkbox checked={mode === "card"} onClick={() => setMode("card")} />
-        Karticka
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar>
+                <AvatarImage src={user?.photoURL ?? ""} alt="@shadcn" />
+                <AvatarFallback>-</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem disabled>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button onClick={signInWithGooglePopup}>login</Button>
+        )}
       </div>
     </div>
   );

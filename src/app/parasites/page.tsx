@@ -6,10 +6,15 @@ import Papa from "papaparse";
 
 import Header from "@/components/nav/Header";
 import Question from "@/components/Question";
+import { useUser } from "@/hooks/userContext";
+import { redirect } from "next/navigation";
+import { shuffle } from "../../utils/shuffle";
+import { formatData } from "@/utils/formatData";
+import { QuestionType } from "@/types/Question";
 
 export default function Home() {
-  const [data, setData] = useState<string[][]>([]);
-  const [mode, setMode] = useState<"card" | "row">("row");
+  const [data, setData] = useState<QuestionType[]>([]);
+  const user = useUser();
 
   const tableHeaders = [
     "Ochorenie",
@@ -21,6 +26,12 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    if (!user) {
+      redirect("/");
+    }
+  }, [user]);
+
+  useEffect(() => {
     importCsvAsString("/csv/parasites.csv")
       .then((data) => {
         Papa.parse(data, {
@@ -30,7 +41,8 @@ export default function Home() {
               (d) => d.length > 1
             ) as any;
 
-            setData(data);
+            shuffle(data);
+            setData(formatData(data));
           },
         });
       })
@@ -41,8 +53,12 @@ export default function Home() {
 
   return (
     <div className="h-screen w-screen  flex flex-col items-center border-2 gap-4">
-      <Header mode={mode} setMode={setMode} />
-      <Question data={data} tableHeaders={tableHeaders} mode={mode} />
+      <Header />
+      <Question
+        data={data}
+        tableHeaders={tableHeaders}
+        questionType="parasites"
+      />
     </div>
   );
 }
